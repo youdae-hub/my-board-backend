@@ -1,0 +1,58 @@
+<%- include('../partials/header', { title: '관리자 추가', currentPage: 'admins', admin, token }) %>
+
+<h1>관리자 추가</h1>
+<div class="card">
+  <div id="error" class="error-msg" style="display:none;"></div>
+  <form id="createForm">
+    <div class="form-group">
+      <label>이메일</label>
+      <input type="email" id="email" required>
+    </div>
+    <div class="form-group">
+      <label>비밀번호</label>
+      <input type="password" id="password" required>
+    </div>
+    <div class="form-group">
+      <label>이름</label>
+      <input type="text" id="name" required>
+    </div>
+    <div class="form-group">
+      <label>역할</label>
+      <select id="role" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:4px;">
+        <option value="REGULAR">일반 관리자</option>
+        <option value="SUPER">총괄 관리자</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">생성</button>
+    <a href="/admin/admins" class="btn" style="background:#999;">취소</a>
+  </form>
+</div>
+
+<script>
+  document.getElementById('createForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('error');
+    errorEl.style.display = 'none';
+
+    const res = await adminFetch('/api/admin/admins', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        name: document.getElementById('name').value,
+        role: document.getElementById('role').value,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      errorEl.textContent = data.message;
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    window.location.href = '/admin/admins';
+  });
+</script>
+
+<%- include('../partials/footer') %>

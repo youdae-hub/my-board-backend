@@ -8,3 +8,15 @@ describe("GET /api/health", () => {
     expect(res.body).toEqual({ status: "ok" });
   });
 });
+
+describe("Express body size limit", () => {
+  it("should accept large JSON body up to 10mb", async () => {
+    const largeContent = "x".repeat(5 * 1024 * 1024);
+
+    const res = await request(app)
+      .post("/api/posts")
+      .send({ title: "test", content: largeContent });
+
+    expect(res.status).not.toBe(413);
+  });
+});

@@ -1,0 +1,41 @@
+<%- include('../partials/header', { title: '관리자 로그', currentPage: 'adminLogs', admin, token }) %>
+
+<h1>관리자 행동 로그</h1>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>관리자</th><th>행동</th><th>대상</th><th>IP</th><th>시간</th></tr>
+    </thead>
+    <tbody id="logList"></tbody>
+  </table>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+  async function loadLogs(page) {
+    const res = await adminFetch(`/api/admin/logs/admin?page=${page}&limit=20`);
+    const data = await res.json();
+    const tbody = document.getElementById('logList');
+    tbody.innerHTML = data.logs.map(l => `
+      <tr>
+        <td>${l.id}</td>
+        <td>${l.admin ? l.admin.name : '-'} (${l.admin ? l.admin.email : '-'})</td>
+        <td><span class="badge badge-regular">${l.action}</span></td>
+        <td>${l.target ? l.target + (l.targetId ? '#' + l.targetId : '') : '-'}</td>
+        <td>${l.ipAddress || '-'}</td>
+        <td>${new Date(l.createdAt).toLocaleString('ko')}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="6">로그가 없습니다.</td></tr>';
+
+    const pag = document.getElementById('pagination');
+    let html = '';
+    for (let i = 1; i <= data.totalPages; i++) {
+      html += `<a href="#" class="${i === page ? 'active' : ''}" onclick="loadLogs(${i}); return false;">${i}</a>`;
+    }
+    pag.innerHTML = html;
+  }
+
+  loadLogs(1);
+</script>
+
+<%- include('../partials/footer') %>

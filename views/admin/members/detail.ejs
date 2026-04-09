@@ -1,0 +1,65 @@
+<%- include('../partials/header', { title: '회원 상세', currentPage: 'members', admin, token }) %>
+
+<h1>회원 상세</h1>
+<div class="card" id="memberInfo"></div>
+<div class="card">
+  <h2 style="margin-bottom: 16px; font-size: 18px;">작성 게시글</h2>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>제목</th><th>작성일</th></tr>
+    </thead>
+    <tbody id="memberPosts"></tbody>
+  </table>
+</div>
+
+<script>
+  const memberId = '<%= memberId %>';
+
+  (async () => {
+    const res = await adminFetch(`/api/admin/members/${memberId}`);
+    if (!res.ok) { alert('회원을 찾을 수 없습니다.'); return; }
+    const user = await res.json();
+
+    document.getElementById('memberInfo').innerHTML = `
+      <p><strong>ID:</strong> ${user.id}</p>
+      <p><strong>이메일:</strong> <input id="editEmail" value="${user.email}" style="padding:6px;border:1px solid #ddd;border-radius:4px;"></p>
+      <p><strong>닉네임:</strong> <input id="editNickname" value="${user.nickname}" style="padding:6px;border:1px solid #ddd;border-radius:4px;"></p>
+      <p><strong>가입일:</strong> ${new Date(user.createdAt).toLocaleDateString('ko')}</p>
+      <div style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="updateMember()">수정</button>
+        <% if (admin.role === 'SUPER') { %>
+          <button class="btn btn-danger" onclick="deleteMember()">삭제</button>
+        <% } %>
+        <a href="/admin/members" class="btn" style="background:#95a5a6;">목록</a>
+      </div>
+    `;
+
+    document.getElementById('memberPosts').innerHTML = user.posts.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td><a href="/admin/posts/${p.id}">${p.title}</a></td>
+        <td>${new Date(p.createdAt).toLocaleDateString('ko')}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="3">게시글이 없습니다.</td></tr>';
+  })();
+
+  async function updateMember() {
+    const nickname = document.getElementById('editNickname').value;
+    const email = document.getElementById('editEmail').value;
+    const res = await adminFetch(`/api/admin/members/${memberId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ nickname, email }),
+    });
+    if (res.ok) { alert('수정되었습니다.'); location.reload(); }
+    else { const d = await res.json(); alert(d.message); }
+  }
+
+  async function deleteMember() {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const res = await adminFetch(`/api/admin/members/${memberId}`, { method: 'DELETE' });
+    if (res.ok) { alert('삭제되었습니다.'); location.href = '/admin/members'; }
+    else { const d = await res.json(); alert(d.message); }
+  }
+</script>
+
+<%- include('../partials/footer') %>

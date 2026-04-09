@@ -1,0 +1,66 @@
+<%- include('../partials/header', { title: '게시판 관리', currentPage: 'posts', admin, token }) %>
+
+<h1>게시판 관리</h1>
+<div class="card mb-20">
+  <form onsubmit="searchPosts(event)" style="display:flex;gap:8px;">
+    <input type="text" id="searchInput" placeholder="검색어 입력" style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:4px;">
+    <button type="submit" class="btn btn-primary">검색</button>
+  </form>
+</div>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>제목</th><th>작성자</th><th>작성일</th><th>관리</th></tr>
+    </thead>
+    <tbody id="postList"></tbody>
+  </table>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+  let currentSearch = '';
+
+  async function loadPosts(page, search) {
+    currentSearch = search || '';
+    let url = `/api/admin/posts?page=${page}&limit=20`;
+    if (currentSearch) url += `&search=${encodeURIComponent(currentSearch)}`;
+    const res = await adminFetch(url);
+    const data = await res.json();
+    const tbody = document.getElementById('postList');
+    tbody.innerHTML = data.posts.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td><a href="/admin/posts/${p.id}">${p.title}</a></td>
+        <td>${p.user ? p.user.nickname : '-'}</td>
+        <td>${new Date(p.createdAt).toLocaleDateString('ko')}</td>
+        <td class="actions">
+          <a href="/admin/posts/${p.id}" class="btn btn-primary btn-sm">상세</a>
+          <button class="btn btn-danger btn-sm" onclick="deletePost(${p.id})">삭제</button>
+        </td>
+      </tr>
+    `).join('');
+
+    const pag = document.getElementById('pagination');
+    let html = '';
+    for (let i = 1; i <= data.totalPages; i++) {
+      html += `<a href="#" class="${i === page ? 'active' : ''}" onclick="loadPosts(${i}, '${currentSearch}'); return false;">${i}</a>`;
+    }
+    pag.innerHTML = html;
+  }
+
+  function searchPosts(e) {
+    e.preventDefault();
+    loadPosts(1, document.getElementById('searchInput').value);
+  }
+
+  async function deletePost(id) {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const res = await adminFetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+    if (res.ok) location.reload();
+    else { const d = await res.json(); alert(d.message); }
+  }
+
+  loadPosts(1);
+</script>
+
+<%- include('../partials/footer') %>

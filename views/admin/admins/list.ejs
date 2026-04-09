@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: '관리자 관리', currentPage: 'admins', admin, token }) %>
+
+<h1>관리자 관리</h1>
+<div class="card mb-20 text-right">
+  <a href="/admin/admins/create" class="btn btn-primary">관리자 추가</a>
+</div>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>이메일</th><th>이름</th><th>역할</th><th>상태</th><th>가입일</th><th>관리</th></tr>
+    </thead>
+    <tbody id="adminList"></tbody>
+  </table>
+</div>
+
+<script>
+  (async () => {
+    const res = await adminFetch('/api/admin/admins');
+    const admins = await res.json();
+    const tbody = document.getElementById('adminList');
+    tbody.innerHTML = admins.map(a => `
+      <tr>
+        <td>${a.id}</td>
+        <td>${a.email}</td>
+        <td>${a.name}</td>
+        <td><span class="badge badge-${a.role === 'SUPER' ? 'super' : 'regular'}">${a.role}</span></td>
+        <td><span class="badge badge-${a.isActive ? 'active' : 'inactive'}">${a.isActive ? '활성' : '비활성'}</span></td>
+        <td>${new Date(a.createdAt).toLocaleDateString('ko')}</td>
+        <td class="actions">
+          ${a.isActive
+            ? `<button class="btn btn-danger btn-sm" onclick="toggleAdmin(${a.id}, 'disable')">비활성화</button>`
+            : `<button class="btn btn-success btn-sm" onclick="toggleAdmin(${a.id}, 'enable')">활성화</button>`
+          }
+        </td>
+      </tr>
+    `).join('');
+  })();
+
+  async function toggleAdmin(id, action) {
+    await adminFetch(`/api/admin/admins/${id}/${action}`, { method: 'PATCH' });
+    location.reload();
+  }
+</script>
+
+<%- include('../partials/footer') %>

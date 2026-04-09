@@ -1,0 +1,46 @@
+<%- include('../partials/header', { title: '회원 관리', currentPage: 'members', admin, token }) %>
+
+<h1>회원 관리</h1>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>이메일</th><th>닉네임</th><th>게시글 수</th><th>가입일</th><th>관리</th></tr>
+    </thead>
+    <tbody id="memberList"></tbody>
+  </table>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+  let currentPage = 1;
+
+  async function loadMembers(page) {
+    currentPage = page;
+    const res = await adminFetch(`/api/admin/members?page=${page}&limit=20`);
+    const data = await res.json();
+    const tbody = document.getElementById('memberList');
+    tbody.innerHTML = data.members.map(m => `
+      <tr>
+        <td>${m.id}</td>
+        <td>${m.email}</td>
+        <td>${m.nickname}</td>
+        <td>${m._count.posts}</td>
+        <td>${new Date(m.createdAt).toLocaleDateString('ko')}</td>
+        <td class="actions">
+          <a href="/admin/members/${m.id}" class="btn btn-primary btn-sm">상세</a>
+        </td>
+      </tr>
+    `).join('');
+
+    const pag = document.getElementById('pagination');
+    let html = '';
+    for (let i = 1; i <= data.totalPages; i++) {
+      html += `<a href="#" class="${i === page ? 'active' : ''}" onclick="loadMembers(${i}); return false;">${i}</a>`;
+    }
+    pag.innerHTML = html;
+  }
+
+  loadMembers(1);
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,54 @@
+<%- include('../partials/header', { title: '게시글 상세', currentPage: 'posts', admin, token }) %>
+
+<h1>게시글 상세</h1>
+<div class="card" id="postDetail"></div>
+
+<script>
+  const postId = '<%= postId %>';
+
+  (async () => {
+    const res = await adminFetch(`/api/admin/posts/${postId}`);
+    if (!res.ok) { alert('게시글을 찾을 수 없습니다.'); return; }
+    const post = await res.json();
+
+    document.getElementById('postDetail').innerHTML = `
+      <p><strong>ID:</strong> ${post.id}</p>
+      <p><strong>작성자:</strong> ${post.user ? post.user.nickname : '-'} (${post.user ? post.user.email : '-'})</p>
+      <p><strong>작성일:</strong> ${new Date(post.createdAt).toLocaleDateString('ko')}</p>
+      <p><strong>수정일:</strong> ${new Date(post.updatedAt).toLocaleDateString('ko')}</p>
+      <div style="margin:16px 0;">
+        <label style="font-weight:600;">제목</label>
+        <input id="editTitle" value="${post.title}" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:4px;margin-top:4px;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-weight:600;">내용</label>
+        <textarea id="editContent" rows="10" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:4px;margin-top:4px;">${post.content}</textarea>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="updatePost()">수정</button>
+        <button class="btn btn-danger" onclick="deletePost()">삭제</button>
+        <a href="/admin/posts" class="btn" style="background:#95a5a6;">목록</a>
+      </div>
+    `;
+  })();
+
+  async function updatePost() {
+    const title = document.getElementById('editTitle').value;
+    const content = document.getElementById('editContent').value;
+    const res = await adminFetch(`/api/admin/posts/${postId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title, content }),
+    });
+    if (res.ok) { alert('수정되었습니다.'); location.reload(); }
+    else { const d = await res.json(); alert(d.message); }
+  }
+
+  async function deletePost() {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const res = await adminFetch(`/api/admin/posts/${postId}`, { method: 'DELETE' });
+    if (res.ok) { alert('삭제되었습니다.'); location.href = '/admin/posts'; }
+    else { const d = await res.json(); alert(d.message); }
+  }
+</script>
+
+<%- include('../partials/footer') %>

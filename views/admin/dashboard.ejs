@@ -1,0 +1,19 @@
+<%- include('partials/header', { title: '대시보드', currentPage: 'dashboard', admin, token }) %>
+
+<h1>대시보드</h1>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="number"><%= stats.users %></div>
+    <div class="label">전체 회원</div>
+  </div>
+  <div class="stat-card">
+    <div class="number"><%= stats.posts %></div>
+    <div class="label">전체 게시글</div>
+  </div>
+  <div class="stat-card">
+    <div class="number"><%= stats.admins %></div>
+    <div class="label">관리자</div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
