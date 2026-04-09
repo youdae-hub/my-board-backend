@@ -13,7 +13,9 @@ const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "../views"));
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({
+  origin: ["http://localhost:5173", "https://my-board-frontend.vercel.app"],
+}));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
