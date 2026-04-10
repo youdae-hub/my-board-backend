@@ -40,6 +40,10 @@ const login = async (req, res) => {
     return res.status(401).json({ message: "이메일 또는 비밀번호가 올바르지 않습니다." });
   }
 
+  if (!user.password) {
+    return res.status(401).json({ message: "구글 로그인을 이용해주세요." });
+  }
+
   const isValid = await bcrypt.compare(password, user.password);
   if (!isValid) {
     return res.status(401).json({ message: "이메일 또는 비밀번호가 올바르지 않습니다." });
